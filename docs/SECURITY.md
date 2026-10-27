@@ -23,4 +23,5 @@ dependency goes to that project.
 - Secret scanning with push protection, Dependabot alerts and security updates, and CodeQL.
 - Dependencies locked with hashes, from an approved feed, and at least 7 days old
   ([supply-chain.md](supply-chain.md)).
-- GitHub Actions pinned by commit SHA, with read-only tokens by default.
+- GitHub Actions pinned by commit SHA, with read-only tokens by default; identifiers kept in
+  secrets and masked in the public run logs ([ci-cd.md](ci-cd.md#public-logs)).

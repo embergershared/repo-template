@@ -15,13 +15,47 @@ comment) and bumped by Dependabot after a 7-day cooldown.
 | Job | Runs when | Steps |
 |---|---|---|
 | Detect stacks | always | .NET when a `*.slnx`/`*.sln`/`*.csproj` is tracked; Python when `requirements-dev.lock` or `requirements.lock` is. |
-| Workflow lint | always | actionlint (checksum-verified download) with shellcheck on every `run:` script. |
+| Workflow lint | always | actionlint (checksum-verified download) with shellcheck on every `run:` script; shellcheck and a self-test of `mask-values` (see [Public logs](#public-logs)). |
 | Package age gate | .NET or Python | `scripts/check_package_age.py`: every locked version at least 7 days old (see [supply-chain.md](supply-chain.md)). |
 | .NET build and test | .NET | `setup-dotnet` from `global.json`, NuGet cache, restore in locked mode, `dotnet format --verify-no-changes`, Release build, tests with `.trx` results uploaded. |
 | Python lint and test | Python | `setup-python` from `.python-version`, `pip install --require-hashes`, `ruff check`, `ruff format --check`, pytest (no tests = warning). |
 | **CI result** | always | Fails when any job failed or was cancelled; skipped jobs are fine. The check the ruleset requires. |
 
 PR runs cancel the previous run of the same PR; runs on `main` are never cancelled.
+
+## Public logs
+
+Anyone can read a public repository's run logs, job summaries and artifacts; a private
+repository that becomes public shows its past runs too. GitHub masks secrets, and values a
+step masks with `::add-mask::`, in the logs and summaries that follow, by matching their text
+anywhere (a subscription ID inside a resource ID too). It doesn't mask **variables**: they are
+printed as is, in every step header that has them in its `env`.
+
+| Value | Where it goes | Why |
+|---|---|---|
+| On/off switches, paths (`TF_DEPLOY_ENABLED`, `DOTNET_SOLUTION`) | Repository variable | Nothing to hide |
+| Tenant, subscription and client IDs; state resource group and account names | Secret (environment secret when it differs per environment) | Identifies the tenant and its resources |
+| Lists of principals (JSON maps of names to object IDs) | Secret, and passed to `mask-values` | GitHub masks the whole JSON only; a step that prints one ID of it would show it |
+| Values read at run time (outputs, resource IDs) | `mask-values` before the step that prints them | They are no secret GitHub knows of |
+
+`.github/actions/mask-values` masks each line of its `values`, each GUID inside them, and each
+key and string of a JSON document (shorter than `min-length`, 4: not masked). Run it first in
+the job, with secrets only: a variable passed to it is printed in its own step header first.
+```yaml
+- uses: ./.github/actions/mask-values
+  with:
+    values: ${{ secrets.PROJECT_USER_PRINCIPALS }}
+```
+CI checks the script with shellcheck and a self-test on fictitious values (**Workflow lint**).
+
+- **Summaries:** counts only for a plan, what-if or deployment (`Plan: 2 to add, 0 to change,
+  0 to destroy`); the full plan stays in the masked log. A plan file holds every value
+  unmasked: never upload it as an artifact.
+- **No dumps:** no `set -x`, `env`, `printenv`, `TF_LOG`, `--debug` output.
+- **Fork PRs** get no secrets and no OIDC token: jobs that need them run only when
+  `github.event.pull_request.head.repo.full_name == github.repository`.
+- **Something leaked:** delete the workflow run (its logs and summaries go with it), then
+  rotate what can be rotated.
 
 ## Repository settings
 
@@ -62,8 +96,8 @@ and write the deploy workflow this way:
 - behind an on/off repository variable and a GitHub environment (with required reviewers for
   anything beyond a sandbox);
 - Azure through OIDC (`id-token: write`, `azure/login`, a federated credential on a user-assigned
-  managed identity or app registration), IDs from repository or environment variables, never a
-  client secret;
+  managed identity or app registration), never a client secret; the IDs in secrets and the
+  job's identifiers masked (see [Public logs](#public-logs));
 - a concurrency group that is never cancelled.
 
 ## Private repositories

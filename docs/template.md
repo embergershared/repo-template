@@ -30,6 +30,7 @@ re-create them. Most of these projects are public: the template assumes it.
 | `.github/copilot-instructions.md` | **The rules** for people and AI coding assistants: authorship, customer data, issue → branch → PR, branch names, commits, secrets, feeds and age gate, safety, testing, database migrations, PowerShell, nano. Ends with a *This project* section to fill in. |
 | `.github/instructions/*.instructions.md` | Copilot rules per file type: .NET, Python, workflows. |
 | `.github/workflows/ci.yml` | Build, lint, test (.NET and Python, auto-detected), workflow lint, package age gate, one `CI result` check. |
+| `.github/actions/mask-values/` | Masks identifiers, the GUIDs inside them and the parts of a JSON secret in a job's logs and summary (see [ci-cd.md](ci-cd.md#public-logs)). |
 | `.github/workflows/pr-rules.yml` | Branch name (no owner prefix from a fork), base branch, linked issue, no AI attribution, commit style warnings. |
 | `.github/dependabot.yml` | GitHub Actions updates with a 7-day cooldown (NuGet and Docker ready to uncomment). |
 | `.github/pull_request_template.md`, `.github/ISSUE_TEMPLATE/` | PR body (What, Database, Tests) and issue forms (feature, bug, phase). |
@@ -44,7 +45,7 @@ re-create them. Most of these projects are public: the template assumes it.
 | `scripts/db/sqlite_backup.py` | WAL-safe SQLite backup, copy, verify, compare, restore. |
 | `scripts/db/Invoke-EfMigration.ps1` | EF Core migrations: backup, trial on a copy, apply, restore on failure, rollback. |
 | `scripts/Initialize-Repo.ps1` | One-time setup of a new repository (removes itself). |
-| `docs/` | Every other page: CI/CD and repository settings, supply chain (and how to turn the approved feed off), database, decisions (ADR template). |
+| `docs/` | Every other page: CI/CD, public logs and repository settings, supply chain (and how to turn the approved feed off), database, decisions (ADR template). |
 | `docs/CHANGELOG.md`, `LICENSE` | Keep a Changelog; MIT (stays at the root, where GitHub reads the license). |
 
 The template has no agent-tool configuration beyond Copilot's instruction files: anything a

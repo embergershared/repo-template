@@ -26,6 +26,8 @@ exposes their environment.
   `.example` next to it.
 - **No real data:** customer documents, logs, exports, database files, or screenshots that show
   any of the above.
+- **Run logs are public too:** workflow logs, job summaries and artifacts. Identifiers go in
+  secrets and are masked (`.github/instructions/workflows.instructions.md`, "Public logs").
 - Read `git diff --staged` before each commit. Secret scanning with push protection is on, but
   it does not catch names or IDs. Something that slipped in is removed from history (not only
   from the latest commit) and reported to the repository owner.

@@ -87,6 +87,31 @@ jobs:
           tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP" actionlint
           "$RUNNER_TEMP/actionlint" -color
 
+      # Fictitious values only. The masks are compared, never printed as is: the runner would
+      # act on ::add-mask:: lines.
+      - name: Mask values action (shellcheck and self-test)
+        env:
+          MASK_MIN_LENGTH: 4
+        run: |
+          script=.github/actions/mask-values/mask-values.sh
+          shellcheck "$script"
+          input='{"alice@contoso.com":{"ids":["00000000-0000-0000-0000-000000000001","dev"]},"rg":"/subscriptions/00000000-0000-0000-0000-000000000002/resourceGroups/rg-50%"}'
+          expected=$(cat <<'MASKS'
+          ::add-mask::/subscriptions/00000000-0000-0000-0000-000000000002/resourceGroups/rg-50%25
+          ::add-mask::00000000-0000-0000-0000-000000000001
+          ::add-mask::00000000-0000-0000-0000-000000000002
+          ::add-mask::alice@contoso.com
+          ::add-mask::{"alice@contoso.com":{"ids":["00000000-0000-0000-0000-000000000001","dev"]},"rg":"/subscriptions/00000000-0000-0000-0000-000000000002/resourceGroups/rg-50%25"}
+          MASKS
+          )
+          actual=$(bash "$script" <<<"$input")
+          differences=$(diff <(LC_ALL=C sort <<<"$actual") <(LC_ALL=C sort <<<"$expected") || true)
+          if [ -n "$differences" ]; then
+            sed 's/::add-mask::/add-mask: /' <<<"$differences"
+            echo "::error::mask-values.sh: the masks above differ from the expected ones (< got, > expected)"
+            exit 1
+          fi
+
   package-age:
     name: Package age gate
     needs: detect
