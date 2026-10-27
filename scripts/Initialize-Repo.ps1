@@ -7,8 +7,11 @@
       1. Replaces the placeholders (__PROJECT_NAME__, __REPO__, __DESCRIPTION__, __YEAR__)
          and removes the template-only parts (README banner, this script).
       2. Removes the files of a stack the project won't use (see -Stacks).
-      3. Sets the GitHub repository: issues on, wiki off, branches deleted on merge, and the
-         'phase' label used by the phase issue form. On a public repository, also: private
+      3. Sets the GitHub repository: issues on, wiki off, branches deleted on merge, the
+         'phase' label used by the phase issue form, and GitHub Actions. When the organization
+         runs Actions in selected repositories only, the script adds this one to the list
+         (token scope admin:org); when it can't, it warns and skips what needs Actions (CodeQL,
+         the ruleset's required checks). On a public repository, also: private
          vulnerability reporting, Dependabot alerts and security updates, secret scanning with
          push protection, CodeQL default setup, and the 'main' ruleset (PR required, with the
          'CI result' and 'PR rules' checks). A private repository on GitHub Free can't have
@@ -56,6 +59,34 @@ function Invoke-Native([string] $Command, [string[]] $Arguments) {
     $output = & $Command @Arguments 2>&1 | ForEach-Object { "$_" }
     if ($LASTEXITCODE -ne 0) { throw "$Command $($Arguments -join ' ') failed:`n$($output -join "`n")" }
     return $output
+}
+
+# Returns whether GitHub Actions can run in the repository, turning it on when it can: an
+# organization that runs Actions in selected repositories only gets this one added to its list.
+function Enable-ActionsForRepo([string] $Repo) {
+    $permissions = "repos/$Repo/actions/permissions"
+    if ((Invoke-Native gh @('api', $permissions) | ConvertFrom-Json).enabled) { return $true }
+    $meta = Invoke-Native gh @('api', "repos/$Repo") | ConvertFrom-Json
+    if ($meta.owner.type -ne 'Organization') {
+        Write-Warning "GitHub Actions is off in ${Repo}: turn it on in Settings > Actions > General."
+        return $false
+    }
+    try {
+        Invoke-Native gh @('api', '-X', 'PUT', "orgs/$($meta.owner.login)/actions/permissions/repositories/$($meta.id)") | Out-Null
+    }
+    catch {
+        # The first line of gh's error says why (scope missing, organization policy).
+        Write-Warning ("GitHub Actions is off in $Repo and the script couldn't add it to the selected repositories of " +
+            "$($meta.owner.login): $((($_.Exception.Message -split "`n")[1]).TrimEnd('.')). " +
+            'See docs/ci-cd.md, "When GitHub Actions is off".')
+        return $false
+    }
+    if (-not (Invoke-Native gh @('api', $permissions) | ConvertFrom-Json).enabled) {
+        Write-Warning "$Repo is in the selected repositories of $($meta.owner.login), but GitHub Actions is still off in its Settings > Actions > General."
+        return $false
+    }
+    Write-Host "GitHub: Actions on (added to the selected repositories of $($meta.owner.login))."
+    return $true
 }
 
 Push-Location $Root
@@ -116,6 +147,7 @@ try {
     Invoke-Native gh @('label', 'create', 'phase', '--repo', $repo, '--color', '5319E7',
         '--description', 'One phase of a planned feature (sub-issue of an umbrella)', '--force') | Out-Null
     Write-Host 'GitHub: issues on, wiki off, branches deleted on merge, label "phase".'
+    $actionsOn = Enable-ActionsForRepo $repo
 
     if ($info.visibility -eq 'PUBLIC') {
         Invoke-Native gh @('api', '-X', 'PUT', "repos/$repo/private-vulnerability-reporting") | Out-Null
@@ -124,8 +156,14 @@ try {
         Invoke-Native gh @('api', '-X', 'PATCH', "repos/$repo",
             '-f', 'security_and_analysis[secret_scanning][status]=enabled',
             '-f', 'security_and_analysis[secret_scanning_push_protection][status]=enabled') | Out-Null
-        Invoke-Native gh @('api', '-X', 'PATCH', "repos/$repo/code-scanning/default-setup", '-f', 'state=configured') | Out-Null
-        Write-Host 'GitHub: private vulnerability reporting, Dependabot alerts and security updates, secret scanning with push protection, CodeQL default setup.'
+        Write-Host 'GitHub: private vulnerability reporting, Dependabot alerts and security updates, secret scanning with push protection.'
+        if ($actionsOn) {
+            Invoke-Native gh @('api', '-X', 'PATCH', "repos/$repo/code-scanning/default-setup", '-f', 'state=configured') | Out-Null
+            Write-Host 'GitHub: CodeQL default setup.'
+        }
+        else {
+            Write-Warning 'CodeQL default setup skipped: it runs on GitHub Actions.'
+        }
 
         $existing = Invoke-Native gh @('api', "repos/$repo/rulesets", '--jq', '.[].name')
         if ($existing -contains 'main') {
@@ -148,12 +186,15 @@ try {
                             required_review_thread_resolution = $false
                         }
                     }
-                    @{ type = 'required_status_checks'; parameters = @{
-                            strict_required_status_checks_policy = $false
-                            required_status_checks               = @($RequiredChecks | ForEach-Object { @{ context = $_ } })
-                        }
-                    }
                 )
+            }
+            # Without Actions the checks never report, and no PR could be merged.
+            if ($actionsOn) {
+                $ruleset.rules += @{ type = 'required_status_checks'; parameters = @{
+                        strict_required_status_checks_policy = $false
+                        required_status_checks               = @($RequiredChecks | ForEach-Object { @{ context = $_ } })
+                    }
+                }
             }
             $rulesetFile = New-TemporaryFile
             try {
@@ -161,7 +202,8 @@ try {
                 Invoke-Native gh @('api', '-X', 'POST', "repos/$repo/rulesets", '--input', $rulesetFile) | Out-Null
             }
             finally { Remove-Item $rulesetFile }
-            Write-Host "GitHub: ruleset ""main"" (PR required; checks: $($RequiredChecks -join ', '))."
+            if ($actionsOn) { Write-Host "GitHub: ruleset ""main"" (PR required; checks: $($RequiredChecks -join ', '))." }
+            else { Write-Warning "Ruleset ""main"" created without its required checks ($($RequiredChecks -join ', ')): they run on GitHub Actions." }
         }
     }
     else {
@@ -225,12 +267,15 @@ The repository was created from [$Template](https://github.com/$Template).
 
 ## Tests
 - No placeholder left outside ``docs/template.md`` (checked by the script).
-- CI runs on this PR.
+- $(if ($actionsOn) { 'CI runs on this PR.' } else { 'CI does not run: GitHub Actions is off in this repository.' })
 "@
     $prUrl = (Invoke-Native gh @('pr', 'create', '--repo', $repo, '--base', $defaultBranch, '--head', $newBranch,
             '--title', 'Initialize the repository from repo-template', '--body', $prBody)) | Select-Object -Last 1
     Write-Host "`nIssue: $issueUrl`nPR   : $prUrl"
     Write-Host 'Next: check the PR, merge it, and see docs/template.md ("After the first PR").'
+    if (-not $actionsOn) {
+        Write-Warning 'GitHub Actions is off: turn it on, then finish the settings it needs (docs/ci-cd.md, "When GitHub Actions is off").'
+    }
 }
 finally {
     Pop-Location
