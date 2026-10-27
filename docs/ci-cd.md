@@ -74,6 +74,7 @@ gh api repos/<owner>/<repo>/code-scanning/default-setup --jq .state
 | Dependabot alerts and security updates | On |
 | Private vulnerability reporting | On: see [SECURITY.md](SECURITY.md) |
 | CodeQL | Default setup |
+| Description (About) | The one the script used (`-Description`, or the repository's own) |
 | Issues, wiki, merged branches | Issues on, wiki off, branches deleted on merge |
 | GitHub Actions | On: added to the organization's selected repositories when needed (see [When GitHub Actions is off](#when-github-actions-is-off)) |
 

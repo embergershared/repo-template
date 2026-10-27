@@ -7,15 +7,15 @@
       1. Replaces the placeholders (__PROJECT_NAME__, __REPO__, __DESCRIPTION__, __YEAR__)
          and removes the template-only parts (README banner, this script).
       2. Removes the files of a stack the project won't use (see -Stacks).
-      3. Sets the GitHub repository: issues on, wiki off, branches deleted on merge, the
-         'phase' label used by the phase issue form, and GitHub Actions. When the organization
-         runs Actions in selected repositories only, the script adds this one to the list
-         (token scope admin:org); when it can't, it warns and skips what needs Actions (CodeQL,
-         the ruleset's required checks). On a public repository, also: private
-         vulnerability reporting, Dependabot alerts and security updates, secret scanning with
-         push protection, CodeQL default setup, and the 'main' ruleset (PR required, with the
-         'CI result' and 'PR rules' checks). A private repository on GitHub Free can't have
-         them: the script says which ones it skipped.
+      3. Sets the GitHub repository: the description (its About), issues on, wiki off,
+         branches deleted on merge, the 'phase' label used by the phase issue form, and GitHub
+         Actions. When the organization runs Actions in selected repositories only, the script
+         adds this one to the list (token scope admin:org); when it can't, it warns and skips
+         what needs Actions (CodeQL, the ruleset's required checks). On a public repository,
+         also: private vulnerability reporting, Dependabot alerts and security updates, secret
+         scanning with push protection, CodeQL default setup, and the 'main' ruleset (PR
+         required, with the 'CI result' and 'PR rules' checks). A private repository on GitHub
+         Free can't have them: the script says which ones it skipped.
       4. Follows the repository rules for the change itself: opens an issue, commits on
          <prefix>/chore/<issue>-initialize-from-template (files staged one by one), pushes and
          opens the PR that closes the issue.
@@ -143,10 +143,11 @@ try {
     }
 
     # ---- 3. GitHub settings -----------------------------------------------------------------
-    Invoke-Native gh @('repo', 'edit', $repo, '--enable-issues', '--enable-wiki=false', '--delete-branch-on-merge') | Out-Null
+    Invoke-Native gh @('repo', 'edit', $repo, '--description', $Description,
+        '--enable-issues', '--enable-wiki=false', '--delete-branch-on-merge') | Out-Null
     Invoke-Native gh @('label', 'create', 'phase', '--repo', $repo, '--color', '5319E7',
         '--description', 'One phase of a planned feature (sub-issue of an umbrella)', '--force') | Out-Null
-    Write-Host 'GitHub: issues on, wiki off, branches deleted on merge, label "phase".'
+    Write-Host 'GitHub: description set, issues on, wiki off, branches deleted on merge, label "phase".'
     $actionsOn = Enable-ActionsForRepo $repo
 
     if ($info.visibility -eq 'PUBLIC') {

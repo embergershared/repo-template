@@ -16,9 +16,9 @@ re-create them. Most of these projects are public: the template assumes it.
    `-Stacks dotnet` or `-Stacks python` removes the other stack's files. `-WhatIf` shows what
    would change; `-SkipGitHub` only edits the files.
    The script replaces the placeholders `__PROJECT_NAME__`, `__REPO__`, `__DESCRIPTION__` and
-   `__YEAR__` (this file keeps them), sets the repository (issues on, wiki off, branches
-   deleted on merge, label `phase`, GitHub Actions) and, when it is public, its security
-   features and the `main` ruleset (see [ci-cd.md](ci-cd.md#repository-settings)). Where the
+   `__YEAR__` (this file keeps them), sets the repository (description, issues on, wiki off,
+   branches deleted on merge, label `phase`, GitHub Actions) and, when it is public, its
+   security features and the `main` ruleset (see [ci-cd.md](ci-cd.md#repository-settings)). Where the
    organization runs Actions in selected repositories only, it adds the repository to that list,
    which needs the `admin:org` scope (`gh auth refresh -h github.com -s admin:org`); without it,
    it skips what needs Actions and says how to finish (see
