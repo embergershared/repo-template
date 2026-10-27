@@ -107,7 +107,7 @@ jobs:
           actual=$(bash "$script" <<<"$input")
           differences=$(diff <(LC_ALL=C sort <<<"$actual") <(LC_ALL=C sort <<<"$expected") || true)
           if [ -n "$differences" ]; then
-            sed 's/::add-mask::/add-mask: /' <<<"$differences"
+            echo "${differences//::add-mask::/add-mask: }"
             echo "::error::mask-values.sh: the masks above differ from the expected ones (< got, > expected)"
             exit 1
           fi
