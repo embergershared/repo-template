@@ -127,8 +127,10 @@ All work goes through it: features, fixes, optimizations, docs, refactors, and c
   one place.
 - **Logging:** structured logging, never `print`/`console.log` for diagnostics. Standard levels
   only (DEBUG/INFO/WARNING/ERROR); never a custom level like VERBOSE.
-- **Docs:** update the matching docs (README, `docs/`, runbooks), `CHANGELOG.md`, and this file
-  in the same change when behavior, config, or a convention changes.
+- **Docs:** update the matching docs (README, `docs/`, runbooks), `docs/CHANGELOG.md`, and this
+  file in the same change when behavior, config, or a convention changes. `README.md` stays a
+  table of contents: background, how-tos and long explanations go in `docs/`, one page per
+  topic, linked from it.
 - **Microsoft and Azure docs:** look them up with the Microsoft Learn MCP tools first; say so
   when falling back to another source.
 

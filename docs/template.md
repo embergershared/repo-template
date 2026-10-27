@@ -33,8 +33,9 @@ re-create them. Most of these projects are public: the template assumes it.
 | `.github/workflows/pr-rules.yml` | Branch name (no owner prefix from a fork), base branch, linked issue, no AI attribution, commit style warnings. |
 | `.github/dependabot.yml` | GitHub Actions updates with a 7-day cooldown (NuGet and Docker ready to uncomment). |
 | `.github/pull_request_template.md`, `.github/ISSUE_TEMPLATE/` | PR body (What, Database, Tests) and issue forms (feature, bug, phase). |
-| `README.md` | Project page, with the "personal project, not an official Microsoft product" note. |
-| `SECURITY.md`, `SUPPORT.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` | Private vulnerability reporting, as-is support, how to contribute, Contributor Covenant. |
+| `README.md` | Project page: the description, the "personal project, not an official Microsoft product" note, then a table of contents of the pages. Nothing else goes there. |
+| `docs/getting-started.md` | Build, run and test the project locally (to fill in). |
+| `docs/SECURITY.md`, `docs/SUPPORT.md`, `docs/CONTRIBUTING.md`, `docs/CODE_OF_CONDUCT.md` | Private vulnerability reporting, as-is support, how to contribute, Contributor Covenant. GitHub finds them in `docs/` as it does at the root. |
 | `.editorconfig`, `.gitattributes`, `.gitignore`, `.dockerignore` | Editor rules, line endings (LF for Linux files), ignored secrets/databases/build output. |
 | `global.json`, `Directory.Build.props`, `Directory.Packages.props`, `nuget.config` | .NET 10 SDK, `net10.0`, analyzers, lock files, central package versions, approved feed only. |
 | `.python-version`, `ruff.toml` | Python 3.13 and ruff settings. |
@@ -43,8 +44,8 @@ re-create them. Most of these projects are public: the template assumes it.
 | `scripts/db/sqlite_backup.py` | WAL-safe SQLite backup, copy, verify, compare, restore. |
 | `scripts/db/Invoke-EfMigration.ps1` | EF Core migrations: backup, trial on a copy, apply, restore on failure, rollback. |
 | `scripts/Initialize-Repo.ps1` | One-time setup of a new repository (removes itself). |
-| `docs/` | CI/CD and repository settings, supply chain (and how to turn the approved feed off), database, decisions (ADR template). |
-| `CHANGELOG.md`, `LICENSE` | Keep a Changelog; MIT. |
+| `docs/` | Every other page: CI/CD and repository settings, supply chain (and how to turn the approved feed off), database, decisions (ADR template). |
+| `docs/CHANGELOG.md`, `LICENSE` | Keep a Changelog; MIT (stays at the root, where GitHub reads the license). |
 
 The template has no agent-tool configuration beyond Copilot's instruction files: anything a
 maintainer's own tools need stays in that maintainer's user settings, not in the repository.
@@ -74,7 +75,8 @@ maintainer's own tools need stays in that maintainer's user settings, not in the
 - **Dependabot:** uncomment the `nuget` / `docker` blocks the project needs.
 - **CodeQL:** once the project has code, check **Security → Code scanning** lists its
   languages (default setup picks them up on the next scan).
-- Fill in the *This project* section of `.github/copilot-instructions.md`.
+- Fill in `docs/getting-started.md` and the *This project* section of
+  `.github/copilot-instructions.md`.
 
 ## Keep projects in step with the template
 
