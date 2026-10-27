@@ -74,7 +74,9 @@ gh api repos/<owner>/<repo>/code-scanning/default-setup --jq .state
 | Dependabot alerts and security updates | On |
 | Private vulnerability reporting | On: see [SECURITY.md](SECURITY.md) |
 | CodeQL | Default setup |
+| Description (About) | The one the script used (`-Description`, or the repository's own) |
 | Issues, wiki, merged branches | Issues on, wiki off, branches deleted on merge |
+| GitHub Actions | On: added to the organization's selected repositories when needed (see [When GitHub Actions is off](#when-github-actions-is-off)) |
 
 A new CI job is added to the `needs` of `CI result`, never as a separate required check, so the
 ruleset doesn't change.
@@ -105,3 +107,24 @@ and write the deploy workflow this way:
 GitHub Free has no rulesets, required checks, secret scanning or CodeQL for private
 repositories. `Initialize-Repo.ps1` says so and skips them. There, the rules still ask for
 PRs, and **PR rules** and **CI result** fail visibly on the PR: merge only when both are green.
+
+## When GitHub Actions is off
+
+An organization can run GitHub Actions in selected repositories only (embergershared does). A
+repository created from the template isn't on that list, so `Initialize-Repo.ps1` adds it: that
+needs the `admin:org` scope on the `gh` token, once per machine. Without it, or when the
+owner's policy doesn't allow it, the script warns, skips the CodeQL default setup and creates
+the `main` ruleset without its required checks (they would never report, so no PR could be
+merged), then opens the PR as usual.
+
+To finish the settings afterwards (PowerShell, workstation):
+```powershell
+gh auth refresh -h github.com -s admin:org
+$repo = '<owner>/<repo>'
+$id = gh api "repos/$repo" --jq .id
+gh api -X PUT "orgs/$($repo.Split('/')[0])/actions/permissions/repositories/$id"
+gh api "repos/$repo/actions/permissions" --jq .enabled
+gh api -X PATCH "repos/$repo/code-scanning/default-setup" -f state=configured
+```
+Then, in the browser: **Settings → Rules → Rulesets → main → Require status checks to pass**,
+add `CI result` and `PR rules`, and save.
