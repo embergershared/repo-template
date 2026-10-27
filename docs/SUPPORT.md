@@ -1,6 +1,6 @@
 # Support
 
-This is a personal project, shared as is under the [MIT license](LICENSE). It is not an
+This is a personal project, shared as is under the [MIT license](../LICENSE). It is not an
 official Microsoft product, and Microsoft does not support it.
 
 - **Questions and bugs:** open an [issue](https://github.com/__REPO__/issues) with what you tried, what you

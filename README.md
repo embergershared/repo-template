@@ -18,32 +18,35 @@ __DESCRIPTION__
 > [!NOTE]
 > This is a personal project, shared as is to help others. It is not an official Microsoft
 > product and is not supported by Microsoft. Review and test it before using any part of it
-> in your environment. See [SUPPORT.md](SUPPORT.md).
+> in your environment. See [docs/SUPPORT.md](docs/SUPPORT.md).
 
-## Getting started
+## Contents
 
-<!-- How to build, run and test the project locally (PowerShell), e.g.:
-```powershell
-dotnet build; dotnet test
-```
--->
+<!-- Keep this README a table of contents: one line on the project above, then the pages.
+     Background, how-tos and long explanations go in docs/, one page per topic. -->
 
-## How work is done here
+**Use it**
+
+| Page | What it covers |
+|---|---|
+| [docs/getting-started.md](docs/getting-started.md) | **Start here:** build, run and test the project locally |
+| [docs/SUPPORT.md](docs/SUPPORT.md) | Questions, bugs, and what support to expect |
+| [docs/CHANGELOG.md](docs/CHANGELOG.md) | Changes |
+
+**Contribute**
 
 Every change starts with an issue, gets its own `<type>/<issue>-<slug>` branch, and reaches
-`main` only through a PR that closes the issue. The full rules, for people and AI coding
-assistants alike, are in [.github/copilot-instructions.md](.github/copilot-instructions.md);
-[CONTRIBUTING.md](CONTRIBUTING.md) has the short version.
+`main` only through a PR that closes the issue.
 
-| Topic | Where |
+| Page | What it covers |
 |---|---|
-| Contributing | [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) |
-| Reporting a vulnerability | [SECURITY.md](SECURITY.md) |
-| CI/CD workflows, ruleset, security settings, repository variables | [docs/ci-cd.md](docs/ci-cd.md) |
-| Package feeds, age gate, lock files | [docs/supply-chain.md](docs/supply-chain.md) |
-| Database migrations, backups, rollback | [docs/database.md](docs/database.md) |
-| Decisions | [docs/decisions/](docs/decisions/) |
-| Changes | [CHANGELOG.md](CHANGELOG.md) |
+| [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md), [docs/CODE_OF_CONDUCT.md](docs/CODE_OF_CONDUCT.md) | How to contribute |
+| [.github/copilot-instructions.md](.github/copilot-instructions.md) | The full rules, for people and AI coding assistants |
+| [docs/ci-cd.md](docs/ci-cd.md) | CI/CD workflows, public logs, ruleset, security settings, repository variables |
+| [docs/supply-chain.md](docs/supply-chain.md) | Package feeds, age gate, lock files |
+| [docs/database.md](docs/database.md) | Database migrations, backups, rollback |
+| [docs/decisions/](docs/decisions/) | Decision records |
+| [docs/SECURITY.md](docs/SECURITY.md) | Reporting a vulnerability |
 
 ## License
 

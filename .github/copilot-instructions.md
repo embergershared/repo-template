@@ -26,6 +26,8 @@ exposes their environment.
   `.example` next to it.
 - **No real data:** customer documents, logs, exports, database files, or screenshots that show
   any of the above.
+- **Run logs are public too:** workflow logs, job summaries and artifacts. Identifiers go in
+  secrets and are masked (`.github/instructions/workflows.instructions.md`, "Public logs").
 - Read `git diff --staged` before each commit. Secret scanning with push protection is on, but
   it does not catch names or IDs. Something that slipped in is removed from history (not only
   from the latest commit) and reported to the repository owner.
@@ -127,8 +129,10 @@ All work goes through it: features, fixes, optimizations, docs, refactors, and c
   one place.
 - **Logging:** structured logging, never `print`/`console.log` for diagnostics. Standard levels
   only (DEBUG/INFO/WARNING/ERROR); never a custom level like VERBOSE.
-- **Docs:** update the matching docs (README, `docs/`, runbooks), `CHANGELOG.md`, and this file
-  in the same change when behavior, config, or a convention changes.
+- **Docs:** update the matching docs (README, `docs/`, runbooks), `docs/CHANGELOG.md`, and this
+  file in the same change when behavior, config, or a convention changes. `README.md` stays a
+  table of contents: background, how-tos and long explanations go in `docs/`, one page per
+  topic, linked from it.
 - **Microsoft and Azure docs:** look them up with the Microsoft Learn MCP tools first; say so
   when falling back to another source.
 
