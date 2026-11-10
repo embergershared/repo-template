@@ -54,6 +54,9 @@ All work goes through it: features, fixes, optimizations, docs, refactors, and c
 3. **Link the PR to its issue(s) and close them on merge.** Every PR references at least one
    issue with a closing keyword, one keyword per issue (`Closes #42, closes #43`;
    `Closes #42, #43` only closes #42). Never open a PR without a linked issue.
+   - **After it merges,** run `./scripts/Sync-Main.ps1` in your clone, not `git pull` on the
+     PR's branch: GitHub deletes the branch on merge, so that pull fails. The script switches
+     to `main`, fast-forwards it, and deletes the merged local branches.
 4. **Plan phases or steps as sub-issues.** One umbrella issue for the whole, plus one issue per
    phase, linked to the umbrella as GitHub **sub-issues** in phase order (use the *Phase of a
    planned feature* issue form).

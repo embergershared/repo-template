@@ -20,8 +20,21 @@ re-create them. Most of these projects are public: the template assumes it.
    deleted on merge, label `phase`) and, when it is public, its security features and the
    `main` ruleset (see [ci-cd.md](ci-cd.md#repository-settings)). Then it opens issue
    *Initialize the repository from repo-template*, commits on
-   `emberger/chore/<issue>-initialize-from-template`, and opens the PR.
-3. Merge that PR once its checks are green. Then see [After the first PR](#after-the-first-pr).
+   `emberger/chore/<issue>-initialize-from-template`, opens the PR, and switches back to `main`.
+3. Merge that PR once its checks are green, run `./scripts/Sync-Main.ps1` (see
+   [After every PR merges](#after-every-pr-merges)), then see [After the first PR](#after-the-first-pr).
+
+## After every PR merges
+
+GitHub deletes a PR's branch when it merges. The local branch then tracks a ref that no longer
+exists, and a plain `git pull` on it fails ("Your configuration specifies to merge with the ref
+… but no such ref was fetched"). Run instead (PowerShell, in the repository's folder):
+```powershell
+./scripts/Sync-Main.ps1
+```
+It fetches with prune, switches to `main` and fast-forwards it, and deletes the local branches
+whose remote branch is gone and that are merged. A gone branch that isn't merged (PR closed, or
+squash-merged) is kept and named: check it, then `git branch -D <name>`.
 
 ## Files
 
@@ -45,6 +58,7 @@ re-create them. Most of these projects are public: the template assumes it.
 | `scripts/db/sqlite_backup.py` | WAL-safe SQLite backup, copy, verify, compare, restore. |
 | `scripts/db/Invoke-EfMigration.ps1` | EF Core migrations: backup, trial on a copy, apply, restore on failure, rollback. |
 | `scripts/Initialize-Repo.ps1` | One-time setup of a new repository (removes itself). |
+| `scripts/Sync-Main.ps1` | After a PR merges: back on an up-to-date `main`, merged local branches deleted. |
 | `docs/` | Every other page: CI/CD, public logs and repository settings, supply chain (and how to turn the approved feed off), database, decisions (ADR template). |
 | `docs/CHANGELOG.md`, `LICENSE` | Keep a Changelog; MIT (stays at the root, where GitHub reads the license). |
 
