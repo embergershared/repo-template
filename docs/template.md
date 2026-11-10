@@ -32,7 +32,7 @@ re-create them. Most of these projects are public: the template assumes it.
 | `.github/workflows/ci.yml` | Build, lint, test (.NET and Python, auto-detected), workflow lint, package age gate, one `CI result` check. |
 | `.github/actions/mask-values/` | Masks identifiers, the GUIDs inside them and the parts of a JSON secret in a job's logs and summary (see [ci-cd.md](ci-cd.md#public-logs)). |
 | `.github/workflows/pr-rules.yml` | Branch name (no owner prefix from a fork), base branch, linked issue, no AI attribution, commit style warnings. |
-| `.github/dependabot.yml` | GitHub Actions updates with a 7-day cooldown (NuGet and Docker ready to uncomment). |
+| `.github/dependabot.yml` | GitHub Actions updates with a 7-day cooldown, weekly (daily in the template); NuGet and Docker ready to uncomment. |
 | `.github/pull_request_template.md`, `.github/ISSUE_TEMPLATE/` | PR body (What, Database, Tests) and issue forms (feature, bug, phase). |
 | `README.md` | Project page: the description, the "personal project, not an official Microsoft product" note, then a table of contents of the pages. Nothing else goes there. |
 | `docs/getting-started.md` | Build, run and test the project locally (to fill in). |
@@ -78,6 +78,14 @@ maintainer's own tools need stays in that maintainer's user settings, not in the
   languages (default setup picks them up on the next scan).
 - Fill in `docs/getting-started.md` and the *This project* section of
   `.github/copilot-instructions.md`.
+
+## Keep the template's pins current
+
+Dependabot checks a repository as soon as `.github/dependabot.yml` lands in it, so a new
+repository gets an update PR for every action release that has cleared the 7-day cooldown but
+is not yet pinned in the template. To avoid that, the template's Dependabot checks **daily**
+(the `# template:start` block, which `Initialize-Repo.ps1` turns into weekly on Monday):
+merge its PRs as soon as their checks are green, before creating a repository from it.
 
 ## Keep projects in step with the template
 
