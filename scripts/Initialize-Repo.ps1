@@ -5,7 +5,8 @@
 .DESCRIPTION
     Run from a clone of the new repository, on its default branch, with a clean tree:
       1. Replaces the placeholders (__PROJECT_NAME__, __REPO__, __DESCRIPTION__, __YEAR__)
-         and removes the template-only parts (README banner, this script).
+         and removes the template-only parts (README banner, the daily Dependabot schedule,
+         this script).
       2. Removes the files of a stack the project won't use (see -Stacks).
       3. Sets the GitHub repository: the description (its About), issues on, wiki off,
          branches deleted on merge, the 'phase' label used by the phase issue form, and GitHub
@@ -124,6 +125,12 @@ try {
             # The banner, its line break and the blank line after it.
             $new = [regex]::Replace($new, '(?s)<!-- template:start -->.*?<!-- template:end -->\r?\n(\r?\n)?', '')
         }
+        if ($file -eq '.github/dependabot.yml') {
+            # The template checks daily to stay current; a project checks weekly, on Monday.
+            $new = [regex]::Replace($new, '(?ms)^( *)# template:start\r?\n.*?^ *# template:end\r?\n',
+                "`${1}interval: weekly`n`${1}day: monday`n")
+            if ($new.Contains('template:start')) { throw "$file`: the template's daily schedule was not replaced." }
+        }
         if ($new -ne $text -and $PSCmdlet.ShouldProcess($file, 'Replace placeholders')) {
             [IO.File]::WriteAllText((Join-Path $Root $file), $new, [Text.UTF8Encoding]::new($false))
         }
@@ -220,7 +227,7 @@ The repository was created from [$Template](https://github.com/$Template) and st
 Expected:
 - The project's name, description and year replace the placeholders (README, LICENSE, CHANGELOG, agent rules).
 - Stacks: $($Stacks -join ', ')$(if ($removed) { "; the $($removed -join ', ') files are removed" }).
-- The template-only parts are gone (README banner, ``scripts/Initialize-Repo.ps1``).
+- The template-only parts are gone (README banner, daily Dependabot schedule, ``scripts/Initialize-Repo.ps1``); Dependabot checks weekly.
 "@
     $issueUrl = (Invoke-Native gh @('issue', 'create', '--repo', $repo, '--title', $title, '--body', $issueBody)) | Select-Object -Last 1
     $number = $issueUrl.Split('/')[-1]
@@ -241,7 +248,8 @@ The repository was created from $Template and still had its placeholders.
 - README, LICENSE, CHANGELOG and the agent rules (.github/copilot-instructions.md) name $($info.name)
   ($repo).
 - Stacks: $($Stacks -join ', ')$(if ($removed) { "; removed the $($removed -join ', ') files" }).
-- Removed the template-only parts: the README banner and scripts/Initialize-Repo.ps1.
+- Removed the template-only parts: the README banner, the daily Dependabot schedule (now weekly, on Monday)
+  and scripts/Initialize-Repo.ps1.
 
 Checked: no placeholder left outside docs/template.md.
 "@
@@ -264,7 +272,7 @@ The repository was created from [$Template](https://github.com/$Template).
 
 - Placeholders replaced: name **$($info.name)**, ``$repo``, the description and the year.
 - Stacks: $($Stacks -join ', ')$(if ($removed) { "; the $($removed -join ', ') files removed" }).
-- Template-only parts removed: the README banner and ``scripts/Initialize-Repo.ps1``.
+- Template-only parts removed: the README banner, the daily Dependabot schedule (now weekly, on Monday) and ``scripts/Initialize-Repo.ps1``.
 
 ## Tests
 - No placeholder left outside ``docs/template.md`` (checked by the script).
