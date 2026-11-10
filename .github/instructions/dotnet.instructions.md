@@ -16,6 +16,8 @@ applyTo: "**/*.cs,**/*.csproj,**/*.props,**/*.targets,**/*.slnx,**/*.sln"
   mode and fails on a stale lock.
 - **Format:** `dotnet format --verify-no-changes` runs in CI; run `dotnet format` before
   committing.
+- **Layout:** the solution (`*.slnx`) at the root, projects in `src/<Project>/`, test projects
+  in `tests/<Project>.Tests/`.
 - **Tests:** xUnit, one test project per production project (`<Project>.Tests`). A bug fix
   comes with a regression test.
 - **EF Core migrations:** only through `scripts/db/Invoke-EfMigration.ps1` (backup first, trial

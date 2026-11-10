@@ -8,6 +8,9 @@ applyTo: "**/*.py,**/requirements*.in,**/requirements*.lock,ruff.toml,.python-ve
 - **Environment:** always the project's `.venv` (`py -3.13 -m venv .venv`, then
   `.venv\Scripts\python -m pip install --require-hashes -r requirements-dev.lock`), never the
   system Python.
+- **Layout:** code in `src/<package>/`, tests in `tests/` (pytest), tooling in `scripts/`;
+  requirements files, `ruff.toml` and `.python-version` at the root. `tests/conftest.py` puts
+  `src/` on the import path (`sys.path.insert`), so the tests import the code as it runs.
 - **Dependencies:** direct dependencies in `requirements.in` (runtime) and
   `requirements-dev.in` (starts with `-r requirements.in`, then ruff, pytest, …). Never edit
   the `.lock` files: run `python scripts/lock_requirements.py`, which pins every package with
