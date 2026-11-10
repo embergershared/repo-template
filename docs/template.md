@@ -53,13 +53,17 @@ maintainer's own tools need stays in that maintainer's user settings, not in the
 
 ## Add a stack
 
-- **.NET:** `dotnet new sln --format slnx`, add projects without `TargetFramework` or package
-  versions (they come from `Directory.Build.props` / `Directory.Packages.props`), add
-  `<PackageVersion>` lines, `dotnet restore`, commit the `packages.lock.json` files. Tests:
-  `<Name>.Tests` projects with xUnit. CI builds the shallowest `*.slnx`/`*.sln` (or set the
-  repository variable `DOTNET_SOLUTION`).
-- **Python:** `requirements.in` (runtime) and `requirements-dev.in` (`-r requirements.in`,
-  then `ruff`, `pytest`), then in the project's `.venv`:
+Code goes under `src/`, tests under `tests/`, tooling under `scripts/` and docs under `docs/`
+(the rule is in `.github/copilot-instructions.md`, *How to work*).
+
+- **.NET:** `dotnet new sln --format slnx` at the root, add projects under `src/<Name>/`
+  without `TargetFramework` or package versions (they come from `Directory.Build.props` /
+  `Directory.Packages.props`), add `<PackageVersion>` lines, `dotnet restore`, commit the
+  `packages.lock.json` files. Tests: `tests/<Name>.Tests/` projects with xUnit. CI builds the
+  shallowest `*.slnx`/`*.sln` (or set the repository variable `DOTNET_SOLUTION`).
+- **Python:** code under `src/<package>/`, tests under `tests/` (with a `conftest.py` that puts
+  `src/` on the import path); `requirements.in` (runtime) and `requirements-dev.in`
+  (`-r requirements.in`, then `ruff`, `pytest`) at the root, then in the project's `.venv`:
   ```powershell
   py -3.13 -m venv .venv
   .venv\Scripts\python -m pip install uv

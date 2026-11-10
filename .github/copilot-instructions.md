@@ -123,6 +123,10 @@ All work goes through it: features, fixes, optimizations, docs, refactors, and c
 - **Follow the existing code.** Read the relevant module and its tests first and match their
   patterns. Keep changes to what was asked; no speculative abstractions. Don't add a new
   formatter, linter, package manager, test runner, framework, or runtime version unasked.
+- **Code lives in `src/`.** Application and library code goes under `src/` (one folder per
+  app, package or project, e.g. `src/App/`, `src/worker/`); tests in `tests/`, tooling in
+  `scripts/`, docs in `docs/`, repository config at the root. A project that doesn't follow it
+  moves through its own issue and PR, not as a side change of other work.
 - **Don't hand-edit vendored, generated, or tool-owned files;** append-only logs stay
   append-only.
 - **No magic numbers.** Put settings in config, and read config and environment variables in
