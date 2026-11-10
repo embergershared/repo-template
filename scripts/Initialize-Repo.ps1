@@ -6,7 +6,8 @@
     Run from a clone of the new repository, on its default branch, with a clean tree:
       1. Replaces the placeholders (__PROJECT_NAME__, __REPO__, __DESCRIPTION__, __YEAR__)
          and removes the template-only parts (README banner, the daily Dependabot schedule,
-         this script).
+         this script). The README then opens with Overview (the description first) and
+         Quick start, and the personal-project note moves to its bottom.
       2. Removes the files of a stack the project won't use (see -Stacks).
       3. Sets the GitHub repository: the description (its About), issues on, wiki off,
          branches deleted on merge, the 'phase' label used by the phase issue form, and GitHub
@@ -90,6 +91,38 @@ function Enable-ActionsForRepo([string] $Repo) {
     return $true
 }
 
+# Returns the template README laid out as a project's: the banner removed, the description
+# (the paragraph under the title) moved to the start of Overview, and the personal-project
+# note moved to the bottom. Throws, naming what is missing, when the README lacks one of them.
+function Format-ProjectReadme([string] $Text, [string] $Description) {
+    $nl = if ($Text.Contains("`r`n")) { "`r`n" } else { "`n" }
+    $options = [Text.RegularExpressions.RegexOptions]'Multiline, Singleline'
+    $parts = [ordered]@{
+        banner      = '<!-- template:start -->.*?<!-- template:end -->\r?\n(\r?\n)?'
+        description = '^__DESCRIPTION__\r?\n(\r?\n)?'
+        note        = '^> \[!NOTE\]\r?\n(>[^\r\n]*\r?\n)*(\r?\n)?'
+        overview    = '^## Overview\r?\n\r?\n<!--.*?-->\r?\n'
+    }
+    $labels = @{
+        banner      = 'template banner (<!-- template:start --> ... <!-- template:end -->)'
+        description = '__DESCRIPTION__ line under the title'
+        note        = 'personal-project note (> [!NOTE])'
+        overview    = "'## Overview' heading followed by its <!-- comment -->"
+    }
+    $missing = @($parts.Keys | Where-Object { [regex]::Matches($Text, $parts[$_], $options).Count -ne 1 })
+    if ($missing) {
+        throw ("README.md must have exactly one " + (($missing | ForEach-Object { $labels[$_] }) -join '; one ') +
+            ' (see docs/template.md, README.md). Nothing was changed.')
+    }
+    $note = [regex]::Match($Text, $parts.note, $options).Value.TrimEnd()
+    foreach ($part in 'banner', 'description', 'note') {
+        $Text = [regex]::new($parts[$part], $options).Replace($Text, '', 1)
+    }
+    $Text = [regex]::new($parts.overview, $options).Replace($Text,
+        [Text.RegularExpressions.MatchEvaluator] { param($m) "$($m.Value)$nl$Description$nl" }, 1)
+    return "$($Text.TrimEnd())$nl$nl$note$nl"
+}
+
 Push-Location $Root
 try {
     # ---- Where we are -------------------------------------------------------------------
@@ -103,6 +136,9 @@ try {
     $prefix = switch ($info.owner.login) { 'embergershared' { 'emberger/' } default { '' } }
     if (-not $Description) { $Description = if ($info.description) { $info.description } else { "$($info.name)." } }
     $removed = @('dotnet', 'python') | Where-Object { $_ -notin $Stacks }
+
+    # The README is laid out in step 1: check it can be, before any file changes.
+    Format-ProjectReadme ([IO.File]::ReadAllText((Join-Path $Root 'README.md'))) $Description | Out-Null
 
     Write-Host "Repository : $repo ($defaultBranch)"
     Write-Host "Description: $Description"
@@ -120,11 +156,8 @@ try {
         $text = [IO.File]::ReadAllText((Join-Path $Root $file))
         if ($text.IndexOf([char]0) -ge 0) { continue }   # binary
         $new = $text
+        if ($file -eq 'README.md') { $new = Format-ProjectReadme $new $Description }
         foreach ($key in $values.Keys) { $new = $new.Replace($key, $values[$key]) }
-        if ($file -eq 'README.md') {
-            # The banner, its line break and the blank line after it.
-            $new = [regex]::Replace($new, '(?s)<!-- template:start -->.*?<!-- template:end -->\r?\n(\r?\n)?', '')
-        }
         if ($file -eq '.github/dependabot.yml') {
             # The template checks daily to stay current; a project checks weekly, on Monday.
             $new = [regex]::Replace($new, '(?ms)^( *)# template:start\r?\n.*?^ *# template:end\r?\n',
@@ -228,6 +261,7 @@ Expected:
 - The project's name, description and year replace the placeholders (README, LICENSE, CHANGELOG, agent rules).
 - Stacks: $($Stacks -join ', ')$(if ($removed) { "; the $($removed -join ', ') files are removed" }).
 - The template-only parts are gone (README banner, daily Dependabot schedule, ``scripts/Initialize-Repo.ps1``); Dependabot checks weekly.
+- The README opens with Overview (the description first) and Quick start; the personal-project note is at its bottom.
 "@
     $issueUrl = (Invoke-Native gh @('issue', 'create', '--repo', $repo, '--title', $title, '--body', $issueBody)) | Select-Object -Last 1
     $number = $issueUrl.Split('/')[-1]
@@ -250,6 +284,7 @@ The repository was created from $Template and still had its placeholders.
 - Stacks: $($Stacks -join ', ')$(if ($removed) { "; removed the $($removed -join ', ') files" }).
 - Removed the template-only parts: the README banner, the daily Dependabot schedule (now weekly, on Monday)
   and scripts/Initialize-Repo.ps1.
+- README: the description opens Overview, before Quick start; the personal-project note is at the bottom.
 
 Checked: no placeholder left outside docs/template.md.
 "@
@@ -273,6 +308,7 @@ The repository was created from [$Template](https://github.com/$Template).
 - Placeholders replaced: name **$($info.name)**, ``$repo``, the description and the year.
 - Stacks: $($Stacks -join ', ')$(if ($removed) { "; the $($removed -join ', ') files removed" }).
 - Template-only parts removed: the README banner, the daily Dependabot schedule (now weekly, on Monday) and ``scripts/Initialize-Repo.ps1``.
+- README: the description opens **Overview**, before **Quick start** (both to fill in); the personal-project note is at the bottom.
 
 ## Tests
 - No placeholder left outside ``docs/template.md`` (checked by the script).
