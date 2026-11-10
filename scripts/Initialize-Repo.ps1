@@ -18,7 +18,7 @@
          Free can't have them: the script says which ones it skipped.
       4. Follows the repository rules for the change itself: opens an issue, commits on
          <prefix>/chore/<issue>-initialize-from-template (files staged one by one), pushes and
-         opens the PR that closes the issue.
+         opens the PR that closes the issue, then switches back to the default branch.
     -WhatIf lists what would change, without changing files or GitHub.
     -SkipGitHub only changes the files (steps 1-2); commit them through a PR yourself.
 
@@ -272,6 +272,10 @@ The repository was created from [$Template](https://github.com/$Template).
 "@
     $prUrl = (Invoke-Native gh @('pr', 'create', '--repo', $repo, '--base', $defaultBranch, '--head', $newBranch,
             '--title', 'Initialize the repository from repo-template', '--body', $prBody)) | Select-Object -Last 1
+    # Back on the default branch: GitHub deletes the PR's branch on merge, and a `git pull` on a
+    # branch whose remote is gone fails. Once the PR merges, Sync-Main.ps1 updates it.
+    Invoke-Native git @('switch', '-q', $defaultBranch) | Out-Null
+    Write-Host "Back on $defaultBranch ($newBranch stays local until the PR merges; then run ./scripts/Sync-Main.ps1)."
     Write-Host "`nIssue: $issueUrl`nPR   : $prUrl"
     Write-Host 'Next: check the PR, merge it, and see docs/template.md ("After the first PR").'
     if (-not $actionsOn) {
